@@ -78,42 +78,55 @@ async def process_text(message: Message, state: FSMContext):
     await state.clear()
 
 def format_prediction_response(result: dict, original_text: str) -> str:
-    """Форматирование результата предсказания"""
     score = result.get("score", 0.5) * 100
     confidence = result.get("confidence", 0) * 100
-    is_viral = result.get("is_viral", False)
     text_length = result.get("text_length", 0)
-    message = result.get("message", "")
     
-    # Эмодзи в зависимости от результата
-    if is_viral:
-        emoji = "🔥" if score > 80 else "📈"
-        viral_status = f"{emoji} <b>ВИРАЛЬНЫЙ</b>"
+    # Определяем уровень потенциала
+    if score < 20:
+        level = "📉 Очень низкий виральный потенциал"
+        level_emoji = "📉"
+    elif score < 40:
+        level = "📉 Низкий виральный потенциал"
+        level_emoji = "📉"
+    elif score < 60:
+        level = "📊 Средний виральный потенциал"
+        level_emoji = "📊"
+    elif score < 80:
+        level = "📈 Высокий виральный потенциал"
+        level_emoji = "📈"
     else:
-        emoji = "📉" if score < 30 else "📊"
-        viral_status = f"{emoji} <b>НЕ виральный</b>"
+        level = "🚀 Очень высокий виральный потенциал"
+        level_emoji = "🚀"
     
-    #Прогресс-бар
+    # Прогресс-бар
     progress_bar = create_progress_bar(score / 100)
     
-    #Рекомендации
-    recommendations = get_recommendations(score, text_length, is_viral)
+    # Рекомендации
+    recommendations = get_recommendations(score, text_length, confidence)
+    
+    # Интерпретация уверенности
+    if confidence > 80:
+        confidence_text = "🔬 Высокая точность прогноза"
+    elif confidence > 50:
+        confidence_text = "📊 Средняя точность прогноза"
+    else:
+        confidence_text = "⚠️ Низкая точность, результат приблизительный"
     
     return f"""
-{viral_status}
+📊 <b>Анализ завершен!</b>
 
-📊 <b>Вероятность виральности:</b> {score:.1f}%
+{level_emoji} <b>{level}</b>
 {progress_bar}
-📈 <b>Уверенность прогноза:</b> {confidence:.1f}%
-📝 <b>Длина текста:</b> {text_length} символов
 
-💭 <b>Анализ:</b>
-{message}
+✅ <b>Вероятность виральности:</b> {score:.1f}%
+🎯 <b>Уверенность прогноза:</b> {confidence:.1f}% ({confidence_text})
+📏 <b>Длина текста:</b> {text_length} символов
 
 💡 <b>Рекомендации:</b>
 {recommendations}
 
-<code>{original_text[:100]}{'...' if len(original_text) > 100 else ''}</code>
+<code>{original_text[:120]}{'...' if len(original_text) > 120 else ''}</code>
 """
 
 def create_progress_bar(percentage: float, length: int = 10) -> str:

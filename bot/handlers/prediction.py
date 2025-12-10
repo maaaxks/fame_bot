@@ -123,8 +123,7 @@ def format_prediction_response(result: dict, original_text: str) -> str:
 🎯 <b>Уверенность прогноза:</b> {confidence:.1f}% ({confidence_text})
 📏 <b>Длина текста:</b> {text_length} символов
 
-💡 <b>Рекомендации:</b>
-{recommendations}
+
 
 <code>{original_text[:120]}{'...' if len(original_text) > 120 else ''}</code>
 """
@@ -137,31 +136,7 @@ def create_progress_bar(percentage: float, length: int = 10) -> str:
     return f"<code>{bar}</code>"
 
 def get_recommendations(score: float, length: int, is_viral: bool) -> str:
-    """Генерация рекомендаций"""
-    recommendations = []
-    
-    if score < 30:
-        recommendations.append("• Добавьте эмоциональных слов")
-        recommendations.append("• Используйте вопросы для вовлечения")
-        recommendations.append("• Сделайте заголовок более цепляющим")
-    elif score < 60:
-        recommendations.append("• Улучшите начало текста")
-        recommendations.append("• Добавьте призыв к действию")
-        recommendations.append("• Используйте больше конкретики")
-    else:
-        recommendations.append("• Отличный текст!")
-        recommendations.append("• Публикуйте в пиковое время")
-        recommendations.append("• Добавьте релевантные хэштеги")
-    
-    if length < 100:
-        recommendations.append("• Увеличьте объем текста (минимум 100 символов)")
-    elif length > 3000:
-        recommendations.append("• Сократите текст для лучшего восприятия")
-    
-    if is_viral and score > 80:
-        recommendations.append("• 🎉 Готово к публикации! Этот текст имеет высокий виральный потенциал!")
-    
-    return "\n".join(recommendations)
+    return
 
 @router.message(Command("stats"))
 async def cmd_stats(message: Message):

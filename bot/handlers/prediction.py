@@ -9,6 +9,11 @@ import logging
 from bot.services.predictor import PredictorService
 from bot.config import settings
 
+from bot.keyboards.inline import get_analysis_keyboard
+from bot.keyboards.main_menu import main_keyboard
+from bot.keyboards.main_menu import predict_keyboard
+
+
 router = Router()
 logger = logging.getLogger(__name__)
 
@@ -30,9 +35,17 @@ async def cmd_predict(message: Message, state: FSMContext):
         "• Вероятность стать виральным\n"
         "• Длину текста\n"
         "• Даем рекомендации",
-        parse_mode="HTML"
+        parse_mode="HTML",
+        recply_markup=predict_keyboard()
     )
     await state.set_state(PredictionState.waiting_for_text)
+
+@router.message(F.text == "🔙 Назад в меню")
+async def handle_back_to_menu(message: Message, state: FSMContext):
+    """Обработка кнопки 'Назад в меню'"""
+    await state.clear()
+    from bot.handlers.common import cmd_start
+    await cmd_start(message)
 
 @router.message(PredictionState.waiting_for_text)
 async def process_text(message: Message, state: FSMContext):
@@ -41,6 +54,10 @@ async def process_text(message: Message, state: FSMContext):
     
     text = message.text or ""
     text_length = len(text)
+
+    if text == "🔙 Назад в меню":
+        await handle_back_to_menu(message, state)
+        return
     
     if text_length < settings.MIN_TEXT_LENGTH:
         await message.answer(
@@ -61,8 +78,23 @@ async def process_text(message: Message, state: FSMContext):
         
         response = format_prediction_response(result, text)
         
-        await message.answer(response, parse_mode="HTML")
+        await message.answer(
+            response, 
+            parse_mode="HTML",
+            reply_markup=get_analysis_keyboard()  # Inline-кнопки под сообщением
+        )
         
+        # Дополнительное сообщение с кнопками menu
+        await message.answer(
+            "🎯 <b>Что дальше?</b>\n\n"
+            "Вы можете:\n"
+            "• Отправить новый текст для анализа\n"
+            "• Вернуться в главное меню\n"
+            "• Посмотреть другие примеры",
+            parse_mode="HTML",
+            reply_markup=main_keyboard()  #Reply-клавиатура
+        )
+
         # Логируем успешное предсказание
         logger.info(f"Предсказание для пользователя {message.from_user.id}: "
                    f"score={result.get('score', 0):.3f}, length={text_length}")
@@ -72,8 +104,10 @@ async def process_text(message: Message, state: FSMContext):
         await message.answer(
             "❌ <b>Произошла ошибка при анализе</b>\n\n"
             "Попробуйте еще раз или обратитесь к администратору.",
-            parse_mode="HTML"
+            parse_mode="HTML",
+            reply_markup=main_keyboard()
         )
+    
     
     await state.clear()
 
@@ -153,5 +187,6 @@ async def cmd_stats(message: Message):
         f"📁 <b>Токенизатор:</b> {settings.TOKENIZER_PATH}\n"
         f"⚡ <b>Порог виральности:</b> {settings.VIRAL_THRESHOLD}\n"
         f"📏 <b>Длина текста:</b> {settings.MIN_TEXT_LENGTH}-{settings.MAX_TEXT_LENGTH} символов",
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=main_keyboard()
     )

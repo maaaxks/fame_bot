@@ -13,7 +13,7 @@ Fame_Detector_Bot (@Fame_Detector_bot) анализирует тексты и п
 
 ⚡ Асинхронная работа - быстрая обработка запросов
 
-Ссылка на модель: https://colab.research.google.com/drive/1jd84hPhuFwhJExVfZ9tF7HA5yBbV7PIg?usp=sharing - model
+Ссылка на модель: https://colab.research.google.com/drive/1jd84hPhuFwhJExVfZ9tF7HA5yBbV7PIg?usp=sharing 
 
 **Основные команды**:
 /start - Главное меню с кнопками
